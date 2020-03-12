@@ -1,0 +1,17 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = https://github.com/munjalchirag7500/n-admin.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[remote "heroku"]
+	url = https://git.heroku.com/sdirect-chirag.git
+	fetch = +refs/heads/*:refs/remotes/heroku/*
+[branch "slave"]
+	remote = origin
+	merge = refs/heads/slave
