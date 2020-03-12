@@ -125,9 +125,8 @@ function adminpass(req, res) {
                                             }
                                             else {
                                                 msg = "Admin Password Updated And Email Send"
-                                                let pro = data.profilepic;
-                                                let name = data.name;
-                                                res.render('index.html', { msg, pro, name });
+                                                alert(msg)
+                                                res.redirect('/');
                                             }
                                         })
                                     }
@@ -179,7 +178,8 @@ function register(req, res) {
             let pro = "";
             let name = "";
             msg = "Registered As User"
-            res.render('index.html', { msg, pro, name });
+            alert(msg)
+            res.redirect('/');
         }
     })
 }
@@ -211,11 +211,11 @@ function login(req, res) {
                     if ((role == 'admin') || (role == 'subadmin')) {
 
                         let token = generateToken(object_id, role)
-                        let pro=data.profilepic;
-                                                        let name=data.name;
-                                                    
+                        let pro = data.profilepic;
+                        let name = data.name;
+
                         msg = role;
-                        res.cookie('name', token).render('index.html', { msg,pro,name });
+                        res.cookie('name', token).redirect('/');
 
                     }
                     else {
@@ -371,10 +371,11 @@ function registersubadmin(req, res) {
             }
         }
         else {
-            let pro="";
-                                                        let name="";
-                                                        msg="Registered"
-                                                    res.render('index.html',{msg,pro,name});
+            let pro = "";
+
+            msg = "Registered";
+            alert(msg)
+            res.redirect('/');
 
         }
     })
@@ -468,9 +469,9 @@ async function resetsapass(req, res) {
             }
             else {
                 msg = "Password Changed & Mail Send"
-                let name=""
-                let pro=""
-                res.render('index.html', { msg ,name,pro});
+
+                res.redirect('/');
+                alert(msg)
             }
         });
     }
@@ -623,16 +624,11 @@ function fileupload(req, res) {
 
     form.parse(req)
         .on('fileBegin', (name, file) => {
-
             let ext = file.name.substring(file.name.lastIndexOf('.') + 1);
             console.log(ext);
             file.name = 'IMG-' + id + '.' + ext;
             file.path = form.uploadDir + file.name;
             console.log(file.path);
-            //    cloudinary.v2.uploader.upload(file.name, 
-            //    function(error, result) {console.log(result, error); });
-
-
         })
     form.on('file', (name, file) => {
 
@@ -685,4 +681,3 @@ function fileupload(req, res) {
         })
     });
 }
-
