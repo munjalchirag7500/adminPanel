@@ -92,7 +92,7 @@ router.post('/adminchangepass',controller.checkAuth,controller.checkType,control
 
 router.post('/resetsapass',controller.checkreset,controller.decryppass,controller.resetsapass);
 
-router.post('/resetpass',controller.checkAuth,controller.checkType,controller.checkreset,controller.resetpass);
+router.post('/resetpass',controller.resetpass);
 
 router.get('/recover/:id',controller.check2Auth,controller.changelinkpass);
 

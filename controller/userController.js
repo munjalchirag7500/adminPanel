@@ -481,9 +481,9 @@ async function resetsapass(req, res) {
         alert("Internal Error")
     }
 }
-async function resetpass(req, res) {
+function resetpass(req, res) {
     let mail = req.body.email;
-
+    console.log(mail);
     userSchema.findOne({ 'email': mail }, async (err, data) => {
         if (err) {
             res.redirect('/');
@@ -495,6 +495,12 @@ async function resetpass(req, res) {
             alert("Please Register Your Account")
         }
         else {
+            let r=data.role;
+            if(r=="subadmin"){
+                res.redirect('/');
+            alert("Request Admin")
+            }
+            else{
             console.log(data);
             let id = data.id;
             let method = "resetpass"
@@ -512,6 +518,7 @@ async function resetpass(req, res) {
                     }
                 })
             }
+        }
         }
     })
 
