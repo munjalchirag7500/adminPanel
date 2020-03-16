@@ -9,6 +9,7 @@ var nameValidator = [
     validate({
         validator: 'isLength',
         arguments: [3, 40],
+        passIfEmpty: true,
         message: 'Name should be between {ARGS[0]} and {ARGS[1]} characters',
     }),
     validate({
@@ -21,6 +22,7 @@ var ageValidator = [
     validate({
         validator: 'isLength',
         arguments: [2, 3],
+        passIfEmpty: true,
         message: 'Age should be Above 18 and Below 100',
     }),
     validate({
@@ -33,8 +35,8 @@ var passValidator = [
     validate({
         validator: 'isLength',
         arguments: [8],
-
-        message: 'Pawword Length Should Be Betwwen 8 and 32',
+        passIfEmpty: true,
+        message: 'Pawword Length Should Be Between 8 and 32',
     })
 ]
 var emailValidator = [
