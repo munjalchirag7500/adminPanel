@@ -905,8 +905,8 @@ function fileupload(req, res) {
                                         console.log(err)
                                     } else {
                                         msg = "File Uploaded";
-                                        let pro = ""
-                                        let name = ""
+                                        let pro = data.profilepic
+                                        let name = data.name
                                         res.render('index.html', {
                                             msg,
                                             pro,
