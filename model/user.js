@@ -24,12 +24,7 @@ var ageValidator = [
         arguments: [2, 3],
         passIfEmpty: true,
         message: 'Age should be Above 18 and Below 100',
-    }),
-    validate({
-        validator: 'isNumeric',
-        passIfEmpty: true,
-        message: 'Age should contain numeric characters only',
-    }),
+    })
 ]
 var passValidator = [
     validate({
