@@ -7,7 +7,8 @@ router.get('/',controller.checkAuth,function(req,res){
   let id=req.id;
   userSchema.findById({'_id':id},(err,data)=>{
     if(err){
-
+      msg=err
+      res.render('login.html',{msg});
     }
     else{
       console.log(data);

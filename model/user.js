@@ -8,7 +8,7 @@ const validate=require('mongoose-validator')
 var nameValidator = [
     validate({
       validator: 'isLength',
-      arguments: [3, 50],
+      arguments: [3, 35],
       message: 'Name should be between {ARGS[0]} and {ARGS[1]} characters',
     }),
     validate({
