@@ -47,8 +47,8 @@ function check2Auth(req, res, next) {
 
             }
             else {
-                res.redirect('/');
-                a.alert("Invalid Token")
+                
+                res.send("Invalid Token");
             }
         }
     })}
@@ -70,7 +70,7 @@ function respass(req, res) {
             console.log(err)
         }
         else if (data == null) {
-            res.redirect('/');
+            res.send("Link Expired");
             a.alert("Link Expired")
         }
         else {
@@ -95,7 +95,8 @@ function adminpass(req, res) {
     let id = req.id || undefined;
     let pass = req.body.pass || undefined;
     let npass = req.body.newpass || undefined;
-
+    let pro=data.profilepic;
+    let name=data.name;
     if((id == undefined) || (pass == undefined) || (npass == undefined)){
         res.send("All Field Required");
     }
@@ -138,7 +139,9 @@ function adminpass(req, res) {
                                             else {
                                                 msg = "Admin Password Updated And Email Send"
                                                 a.alert(msg)
-                                                res.redirect('/');
+                                                let pro=""
+                                                let name=""
+                                                res.render('index.html',{msg,pro,name});
                                             }
                                         })
                                     }
@@ -151,7 +154,11 @@ function adminpass(req, res) {
                     });
                 }
                 if (!isMatch) {
-                    res.json("not matched");
+                    msg = "Wrong PAssword"
+                                                a.alert(msg)
+                                                let pro=""
+                                                let name=""
+                                                res.render('index.html',{msg,pro,name});
                 }
             })
         }
@@ -162,23 +169,25 @@ function adminpass(req, res) {
 
 function register(req, res) {
 
-    let name = req.body.name || undefined;
+    let nam = req.body.name || undefined;
     let age = req.body.age || undefined; 
     let email = req.body.email || undefined;
     let password = generator.generate({
         length: 10
     });
 
-    if((name == undefined) || (age==undefined)||(email==undefined)){
+    if((nam == undefined) || (age==undefined)||(email==undefined)){
         res.send("All Field Required");
     }
 
 
 
     else {
-    let testUser = new userSchema({ 'name': name, 'age': age, 'email': email, 'password': password })
+    let status = eMail(email,password,undefined);
+    if (status){    
+    let testUser = new userSchema({ 'name': nam, 'age': age, 'email': email, 'password': password })
 
-    testUser.save(function (err, data) {
+    testUser.save(function (err) {
         if (err) {
             if (err.code == '11000') {
                 console.log(err);
@@ -191,13 +200,21 @@ function register(req, res) {
             }
         }
         else {
-            let pro = "";
-            let name = "";
             msg = "Registered As User"
-            a.alert(msg)
-            res.redirect('/');
+            let pro=""
+            let name=""
+            res.render("index.html",{msg,pro,name});
         }
-    })}
+    })
+}
+else{
+    
+    msg = "Error In Sending Mail Try Again"
+    let pro=""
+    let name=""
+    res.render("index.html",{msg,pro,name});
+}
+}
 }
 
 function login(req, res) {
@@ -410,7 +427,10 @@ function registersubadmin(req, res) {
 
             msg = "Registered";
             a.alert(msg)
-            res.redirect('/');
+            let pro=""
+            let name=""
+            
+            res.render('index.html',{msg,pro,name});
 
         }
     })}
@@ -429,7 +449,8 @@ function checkAuth(req, res, next) {
     jwt.verify(token, key.secret, function (err, data) {
         if (err) {
             console.log(err);
-            res.render('login.html');
+            msg=err
+            res.render('login.html',{msg});
         }
         else {
             console.log(data)
@@ -502,15 +523,18 @@ async function resetsapass(req, res) {
             }
             else {
                 msg = "Password Changed & Mail Send"
-
-                res.redirect('/');
+                let pro=""
+                let name=""
+                res.render('index.html',{msg,pro,name});
                 a.alert(msg)
             }
         });
     }
     else {
-
-        res.redirect('/');
+        msg="Internal Error"
+        let pro=""
+            let name=""
+        res.render('index.html',{msg,pro,name});
         a.alert("Internal Error")
     }
 }
@@ -524,19 +548,22 @@ function resetpass(req, res) {
     else{
     userSchema.findOne({ 'email': mail }, async (err, data) => {
         if (err) {
-            res.redirect('/');
+            msg="Internal Error"
+            res.render('login.html',{msg});
             a.alert(err)
         }
         if (data == null) {
             console.log(data);
-            res.redirect('/');
+            msg="User Not Registered"
+            res.render('login.html',{msg});
             a.alert("USer Not Registered")
         }
         else {
             let r=data.role;
             if(r=="subadmin"){
-                res.redirect('/');
-            a.alert("Request Admin")
+                msg="Request Admin"
+                res.render('login.html',{msg});
+                a.alert("Request Admin")
             }
             else{
             console.log(data);
@@ -548,10 +575,12 @@ function resetpass(req, res) {
             if (status) {
                 userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'passwordreset': token } }).exec((err, result) => {
                     if (err) {
-                        console.log(err)
+                        msg=err
+                        res.render('login.html',{msg});
                     }
                     else {
-                        res.redirect('/');
+                        msg="Reset Link Has Been Send To Mail"
+                        res.render('login.html',{msg});
                         a.alert("Reset Link Has Been Send To Mail")
                     }
                 })
@@ -619,8 +648,8 @@ function checkreset(req, res, next) {
                 res.json("error")
             }
             else if (data == null) {
-                res.redirect('/');
-                a.alert("aaaaaaaaaaaaaa ")
+                msg="User Not Found"
+                res.render('login.html',{msg});
             }
             else {
                 let role = data.role;
@@ -729,7 +758,7 @@ function fileupload(req, res) {
     
                     }
                     else if (data == null) {
-                        a.alert("error");
+                         res.redirect('/');
     
                     }
                     else {
@@ -741,7 +770,9 @@ function fileupload(req, res) {
                             else {
                                 msg = "File Uploaded";
                                 a.alert(msg);
-                                res.redirect('/');
+                                let pro=""
+                                let name=""
+                                res.render('index.html',{msg,pro,name});
                             }
                         })
     
