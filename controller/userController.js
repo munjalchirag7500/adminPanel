@@ -10,7 +10,6 @@ const userSchema = require('../model/user');
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 var generator = require('generate-password');
-var a = require('js-alert');
 const formidable = require('formidable');
 var path = require('path');
 const cloudinary = require('cloudinary')
@@ -38,7 +37,7 @@ function check2Auth(req, res, next) {
             if (err) {
                 msg = err;
                 res.render('login.html', { msg });
-                a.alert("PPPPPP")
+
             }
             else {
                 let role = decode.role;
@@ -70,10 +69,12 @@ function respass(req, res) {
         userSchema.findOne({ '_id': id, 'passwordreset': token }).exec((err, data) => {
             if (err) {
                 console.log(err)
+                msg = err
+                res.render('login.html', { msg });
             }
             else if (data == null) {
                 res.send("Link Expired");
-                a.alert("Link Expired")
+
             }
             else {
                 data.passwordreset = undefined;
@@ -81,6 +82,8 @@ function respass(req, res) {
                 data.save(function (err, result) {
                     if (err) {
                         console.log(err);
+                        msg = err
+                        res.render('login.html', { msg });
                     }
                     else {
                         msg = "password Changed"
@@ -106,7 +109,10 @@ function adminpass(req, res) {
     else {
         userSchema.findById({ '_id': id }, function (err, data) {
             if (err) {
-                console.log(err);
+                msg = err
+                let name = ""
+                let pro = ""
+                res.render('index.html', { msg, name, pro });
 
             }
             else {
@@ -117,6 +123,10 @@ function adminpass(req, res) {
                     if (isMatch) {
                         bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
                             if (err) {
+                                let name = ""
+                                let pro = ""
+                                msg = err
+                                res.render('index.html', { msg, name, pro });
                                 console.log(err)
                             }
 
@@ -124,6 +134,10 @@ function adminpass(req, res) {
                                 bcrypt.hash(npass, salt, async function (err, hash) {
                                     if (err) {
                                         console.log(err)
+                                        msg = err;
+                                        let name = ""
+                                        let pro = ""
+                                        res.render('index.html', { msg, name, pro });
                                     }
                                     else {
                                         let mail = data.email;
@@ -135,11 +149,15 @@ function adminpass(req, res) {
                                         if (status) {
                                             userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'password': passnew } }, function (err, data) {
                                                 if (err) {
+                                                    msg = err
+                                                    let name = ""
+                                                    let pro = ""
+                                                    res.render('index.html', { msg, name, pro });
                                                     console.log(err);
                                                 }
                                                 else {
                                                     msg = "Admin Password Updated And Email Send"
-                                                    a.alert(msg)
+
                                                     let pro = ""
                                                     let name = ""
                                                     res.render('index.html', { msg, pro, name });
@@ -156,7 +174,7 @@ function adminpass(req, res) {
                     }
                     if (!isMatch) {
                         msg = "Wrong PAssword"
-                        a.alert(msg)
+
                         let pro = ""
                         let name = ""
                         res.render('index.html', { msg, pro, name });
@@ -177,6 +195,7 @@ function register(req, res) {
     let password = generator.generate({
         length: 10
     });
+    console.log("AAAAAAAAAAA", typeof (age));
 
     if ((nam == undefined) || (age == undefined) || (email == undefined)) {
         res.send("All Field Required");
@@ -231,7 +250,9 @@ function login(req, res) {
 
 
             if (err) {
-
+                msg = err
+                
+                res.render('login.html', { msg});
 
             }
 
@@ -249,8 +270,7 @@ function login(req, res) {
                         if ((role == 'admin') || (role == 'subadmin')) {
 
                             let token = generateToken(object_id, role)
-                            let pro = data.profilepic;
-                            let name = data.name;
+                            
 
                             msg = role;
                             res.cookie('name', token).redirect('/');
@@ -432,7 +452,7 @@ function registersubadmin(req, res) {
 
 
                 msg = "Registered";
-                a.alert(msg)
+
                 let pro = ""
                 let name = ""
 
@@ -533,7 +553,7 @@ async function resetsapass(req, res) {
                 let pro = ""
                 let name = ""
                 res.render('index.html', { msg, pro, name });
-                a.alert(msg)
+
             }
         });
     }
@@ -542,7 +562,7 @@ async function resetsapass(req, res) {
         let pro = ""
         let name = ""
         res.render('index.html', { msg, pro, name });
-        a.alert("Internal Error")
+
     }
 }
 function resetpass(req, res) {
@@ -557,20 +577,20 @@ function resetpass(req, res) {
             if (err) {
                 msg = "Internal Error"
                 res.render('login.html', { msg });
-                a.alert(err)
+
             }
             if (data == null) {
                 console.log(data);
                 msg = "User Not Registered"
                 res.render('login.html', { msg });
-                a.alert("USer Not Registered")
+
             }
             else {
                 let r = data.role;
                 if (r == "subadmin") {
                     msg = "Request Admin"
                     res.render('login.html', { msg });
-                    a.alert("Request Admin")
+
                 }
                 else {
                     console.log(data);
@@ -588,7 +608,7 @@ function resetpass(req, res) {
                             else {
                                 msg = "Reset Link Has Been Send To Mail"
                                 res.render('login.html', { msg });
-                                a.alert("Reset Link Has Been Send To Mail")
+
                             }
                         })
                     }
@@ -778,7 +798,6 @@ function fileupload(req, res) {
                                         }
                                         else {
                                             msg = "File Uploaded";
-                                            a.alert(msg);
                                             let pro = ""
                                             let name = ""
                                             res.render('index.html', { msg, pro, name });
