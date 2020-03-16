@@ -10,7 +10,7 @@ const userSchema = require('../model/user');
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 var generator = require('generate-password');
-const alert = require('alert-node');
+var a = require('js-alert');
 const formidable = require('formidable');
 var path = require('path');
 const cloudinary = require('cloudinary')
@@ -28,12 +28,16 @@ let transporter = nodemailer.createTransport({
 });
 
 function check2Auth(req, res, next) {
-    let id = req.params.id;
+    let id = req.params.id || undefined;
+    if(id == undefined){
+        res.send("All Field Required");
+    }
+    else{
     console.log(id);
     jwt.verify(id, key.secret, function (err, decode) {
         if (err) {
             res.redirect('/');
-            alert("Invalid Token")
+            a.alert("PPPPPP")
         }
         else {
             let role = decode.role;
@@ -44,26 +48,30 @@ function check2Auth(req, res, next) {
             }
             else {
                 res.redirect('/');
-                alert("Invalid Token")
+                a.alert("Invalid Token")
             }
         }
-    })
+    })}
 }
 
 
 
 function respass(req, res) {
 
-    let token = req.body.link;
-    let id = req.body.id;
-    let pass = req.body.password;
+    let token = req.body.link || undefined;
+    let id = req.body.id || undefined;
+    let pass = req.body.password || undefined;
+    if ((token == undefined )  || (id == undefined ) || (pass == undefined)){
+        res.send("All Field Required");
+    }
+    else{
     userSchema.findOne({ '_id': id, 'passwordreset': token }).exec((err, data) => {
         if (err) {
             console.log(err)
         }
         else if (data == null) {
             res.redirect('/');
-            alert("Link Expired")
+            a.alert("Link Expired")
         }
         else {
             data.passwordreset = undefined;
@@ -74,22 +82,26 @@ function respass(req, res) {
                 }
                 else {
                     res.redirect('/');
-                    alert("Password Changed")
+                    a.alert("Password Changed")
                 }
             })
         }
-    })
-
-
+    })}
 }
 
 
 
 function adminpass(req, res) {
-    let id = req.id;
-    let pass = req.body.pass;
-    let npass = req.body.newpass;
-    console.log(id, ">>>>>>>>>", pass, ">>>>>>>>", npass);
+    let id = req.id || undefined;
+    let pass = req.body.pass || undefined;
+    let npass = req.body.newpass || undefined;
+
+    if((id == undefined) || (pass == undefined) || (npass == undefined)){
+        res.send("All Field Required");
+    }
+
+
+    else{
     userSchema.findById({ '_id': id }, function (err, data) {
         if (err) {
             console.log(err);
@@ -125,7 +137,7 @@ function adminpass(req, res) {
                                             }
                                             else {
                                                 msg = "Admin Password Updated And Email Send"
-                                                alert(msg)
+                                                a.alert(msg)
                                                 res.redirect('/');
                                             }
                                         })
@@ -143,23 +155,27 @@ function adminpass(req, res) {
                 }
             })
         }
-    })
+    })}
 
 
 }
 
 function register(req, res) {
 
-    let name = req.body.name;
-    let age = req.body.age; 7500
-    let email = req.body.email;
+    let name = req.body.name || undefined;
+    let age = req.body.age || undefined; 
+    let email = req.body.email || undefined;
     let password = generator.generate({
         length: 10
     });
 
+    if((name == undefined) || (age==undefined)||(email==undefined)){
+        res.send("All Field Required");
+    }
 
 
 
+    else {
     let testUser = new userSchema({ 'name': name, 'age': age, 'email': email, 'password': password })
 
     testUser.save(function (err, data) {
@@ -178,17 +194,20 @@ function register(req, res) {
             let pro = "";
             let name = "";
             msg = "Registered As User"
-            alert(msg)
+            a.alert(msg)
             res.redirect('/');
         }
-    })
+    })}
 }
 
 function login(req, res) {
 
-    let email = req.body.email;
-    let pass = req.body.password;
-
+    let email = req.body.email || undefined;
+    let pass = req.body.password || undefined;
+    if((email == undefined) || (pass==undefined)){
+        res.send("All Field Required");
+    }
+    else{
     userSchema.findOne({ email: email }, function (err, data) {
 
 
@@ -230,7 +249,7 @@ function login(req, res) {
 
 
         }
-    });
+    });}
 
 }
 
@@ -238,7 +257,7 @@ function login(req, res) {
 
 function getUser(req, res) {
 
-    userSchema.find({ 'role': 'user' }, function (err, data) {
+    userSchema.find({ 'role': 'user' ,'is_deleted': false }, function (err, data) {
         juser = data
         res.render('user.html', { juser });
     })
@@ -246,7 +265,7 @@ function getUser(req, res) {
 }
 function getSubadmin(req, res) {
 
-    userSchema.find({ 'role': 'subadmin' }, function (err, data) {
+    userSchema.find({ 'role': 'subadmin' ,'is_deleted':false }, function (err, data) {
         juser = data
         res.render('subadmin.html', { juser });
     })
@@ -255,7 +274,12 @@ function getSubadmin(req, res) {
 
 
 function changepass(req, res) {
-    let id = req.params.id;
+    let id = req.params.id || undefined;
+
+    if((id == undefined)){
+        res.send("All Field Required");
+    }
+    else{
     userSchema.findOne({ '_id': id }, function (err, data) {
         if (err) {
             res.json("Error ")
@@ -266,11 +290,15 @@ function changepass(req, res) {
             let name = data.name;
             res.render('changesubadminpass.html', { id, email, name });
         }
-    })
+    })}
 }
 function changelinkpass(req, res) {
     let id = req.id;
     let link = req.params.id;
+    if((id == undefined) || (link==undefined)){
+        res.send("All Field Required");
+    }
+    else{
     console.log("????????????????????????", link);
     userSchema.findOne({ '_id': id }, function (err, data) {
         if (err) {
@@ -282,7 +310,7 @@ function changelinkpass(req, res) {
             let name = data.name;
             res.render('linkpass.html', { id, email, name, link });
         }
-    })
+    })}
 }
 function mod(req, res) {
     let id = req.params.id;
@@ -306,12 +334,15 @@ function mod(req, res) {
 
 
 function modify(req, res) {
-    let name = req.body.name;
-    let age = req.body.age;
-    let role = req.body.role;
-    let id = req.body.id;
-    let is_deleted = req.body.is_deleted;
-    console.log(is_deleted)
+    let name = req.body.name || undefined;
+    let age = req.body.age || undefined;
+    let role = req.body.role || undefined;
+    let id = req.body.id || undefined;
+    let is_deleted = req.body.is_deleted || undefined;
+    if((name == undefined) || (age==undefined)||(role ==undefined)||(id ==undefined)||(is_deleted ==undefined)){
+        res.send("All Field Required");
+    }
+    else{
     userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'name': name, 'age': age, 'role': role, 'is_deleted': is_deleted } }, (err, data) => {
         if (err) {
             console.log(err)
@@ -325,7 +356,7 @@ function modify(req, res) {
                 res.redirect('/viewuser');
             }
         }
-    })
+    })}
 }
 function del(req, res) {
 
@@ -349,12 +380,16 @@ function del(req, res) {
 function registersubadmin(req, res) {
 
 
-    let name = req.body.name;
-    let age = req.body.age;
-    let email = req.body.email;
-    let password = req.body.pass;
+    let name = req.body.name || undefined;
+    let age = req.body.age || undefined;
+    let email = req.body.email || undefined;
+    let password = req.body.pass || undefined;
     let role = 'subadmin'
 
+    if((name == undefined) || (age==undefined)||(role ==undefined)||(email ==undefined)||(password ==undefined)){
+        res.send("All Field Required");
+    }
+    else{
     let testUser = new userSchema({ 'name': name, 'age': age, 'email': email, 'password': password, 'role': role })
 
     testUser.save(function (err) {
@@ -371,14 +406,14 @@ function registersubadmin(req, res) {
             }
         }
         else {
-            let pro = "";
+            
 
             msg = "Registered";
-            alert(msg)
+            a.alert(msg)
             res.redirect('/');
 
         }
-    })
+    })}
 
 }
 
@@ -390,7 +425,7 @@ function generateToken(value, role) {
 function checkAuth(req, res, next) {
 
     let token = req.cookies.name;
-
+        
     jwt.verify(token, key.secret, function (err, data) {
         if (err) {
             console.log(err);
@@ -425,8 +460,6 @@ function eMail(email, password, link) {
             html: 'Thanking You For Reg istering Your Email: ' + email + '  Password: ' + password
         };
     }
-    console.log("passwrd", password)
-    console.log("Link", link)
     return new Promise((resolve, reject) => {
         transporter.sendMail(mailOptions, function (err) {
 
@@ -471,34 +504,39 @@ async function resetsapass(req, res) {
                 msg = "Password Changed & Mail Send"
 
                 res.redirect('/');
-                alert(msg)
+                a.alert(msg)
             }
         });
     }
     else {
 
         res.redirect('/');
-        alert("Internal Error")
+        a.alert("Internal Error")
     }
 }
 function resetpass(req, res) {
-    let mail = req.body.email;
-    console.log(mail);
+   
+
+    let mail = req.body.email || undefined;
+    if((mail == undefined) ){
+        res.send("All Field Required");
+    }
+    else{
     userSchema.findOne({ 'email': mail }, async (err, data) => {
         if (err) {
             res.redirect('/');
-            alert(err)
+            a.alert(err)
         }
         if (data == null) {
             console.log(data);
             res.redirect('/');
-            alert("Please Register Your Account")
+            a.alert("USer Not Registered")
         }
         else {
             let r=data.role;
             if(r=="subadmin"){
                 res.redirect('/');
-            alert("Request Admin")
+            a.alert("Request Admin")
             }
             else{
             console.log(data);
@@ -514,13 +552,13 @@ function resetpass(req, res) {
                     }
                     else {
                         res.redirect('/');
-                        alert("Reset Link Has Been Send To Mail")
+                        a.alert("Reset Link Has Been Send To Mail")
                     }
                 })
             }
         }
         }
-    })
+    })}
 
     //let status= await eMail(mail,pass,link);
     // if(status){
@@ -571,14 +609,18 @@ function decryppass(req, res, next) {
 function checkreset(req, res, next) {
 
     if (req.body.email) {
-        let email = req.body.email
+        let email = req.body.email || undefined 
+        if(email == undefined){
+            res.send("All Field Required");
+        }
+        else{
         userSchema.findOne({ 'email': email }, function (err, data) {
             if (err) {
                 res.json("error")
             }
             else if (data == null) {
                 res.redirect('/');
-                alert("Email Not Registered")
+                a.alert("aaaaaaaaaaaaaa ")
             }
             else {
                 let role = data.role;
@@ -597,13 +639,17 @@ function checkreset(req, res, next) {
                 }
             }
 
-        })
+        })}
     }
 
     if (req.body.id) {
-        let id = req.body.id;
-        let pass = req.body.password;
+        let id = req.body.id || undefined;
+        let pass = req.body.password || undefined;
         console.log("jhjjjjjk")
+        if((id==undefined) || (pass == undefined)){
+            res.send("All Field Required");
+        }
+        else{
         userSchema.findById({ '_id': id }, function (err, data) {
             if (err) {
                 console.log(err)
@@ -616,7 +662,7 @@ function checkreset(req, res, next) {
                 next();
 
             }
-        })
+        })}
     }
 }
 
@@ -629,62 +675,85 @@ function fileupload(req, res) {
     });
 
 
-    form.parse(req)
-        .on('fileBegin', (name, file) => {
-            let ext = file.name.substring(file.name.lastIndexOf('.') + 1);
-            console.log(ext);
-            file.name = 'IMG-' + id + '.' + ext;
-            file.path = form.uploadDir + file.name;
-            console.log(file.path);
-        })
+    form.parse(req);
+    
+    form.on('fileBegin',(name,file)=>{
+        let ext = file.name.substring(file.name.lastIndexOf('.') + 1);
+        file.name = 'IMG-' + id + '.' + ext;
+        file.path = form.uploadDir + file.name;
+    }),
+    
     form.on('file', (name, file) => {
 
-        cloudinary.v2.uploader.upload(file.path, {
-            folder: 'chirag',
-            use_filename: true,
-            transformation: [
-                {
-                    aspect_ratio: "1:1",
-                    background: "#262c35",
-                    border: "5px_solid_rgb:ff0000",
-                    gravity: "auto",
-                    radius: "max",
-                    width: 1000,
-                    crop: "fill"
-                }]
+        
+        let n= file.name || undefined;
+        let ext = file.name.substring(file.name.lastIndexOf('.') + 1);
+        file.name = 'IMG-' + id + '.' + ext;
+        if((n == undefined) || (n == null)){
+            res.send("Please Select Image");
+        }
 
-        }, function (error, result) {
 
-            if (error) {
-                // console.log("EEEEEEEEEEEEEE",error);
+        else
+        {
+        
+        
+        file.path = form.uploadDir + file.name;
+        if(ext == "png" || ext == "jpeg"  || ext == "jpg"){
+            console.log(file.path);
+            cloudinary.v2.uploader.upload(file.path, {
+                folder: 'chirag',
+                use_filename: true,
+                transformation: [
+                    {
+                        aspect_ratio: "1:1",
+                        background: "#262c35",
+                        border: "5px_solid_rgb:ff0000",
+                        gravity: "auto",
+                        radius: "max",
+                        width: 1000,
+                        crop: "fill"
+                    }]
+    
+            }, function (error, result) {
+    
+                if(error){
+                    res.send(error)
+                    console.log(error);
+                }
+                else{
+
+                
+                userSchema.findOne({ '_id': req.id }, (err, data) => {
+                    if (err) {
+    
+                    }
+                    else if (data == null) {
+                        a.alert("error");
+    
+                    }
+                    else {
+                        data.profilepic = result.url;
+                        data.save((err) => {
+                            if (err) {
+    
+                            }
+                            else {
+                                msg = "File Uploaded";
+                                a.alert(msg);
+                                res.redirect('/');
+                            }
+                        })
+    
+                    }
+                })
             }
-            else
-                // console.log("CCCCCCCCCCCCC",result);
-                console.log(req.id);
-            userSchema.findOne({ '_id': req.id }, (err, data) => {
-                if (err) {
-
-                }
-                else if (data == null) {
-                    alert("error");
-
-                }
-                else {
-                    data.profilepic = result.url;
-                    data.save((err) => {
-                        if (err) {
-
-                        }
-                        else {
-                            msg = "File Uploaded";
-                            alert(msg);
-                            res.redirect('/');
-                        }
-                    })
-
-                }
-            })
-
-        })
+            })}
+            else{
+                res.send(" Invalid Format Please Select Image with png jpg or jpeg format");
+            }
+        }
+        
+        
     });
 }
