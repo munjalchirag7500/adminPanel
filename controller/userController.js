@@ -29,29 +29,31 @@ let transporter = nodemailer.createTransport({
 
 function check2Auth(req, res, next) {
     let id = req.params.id || undefined;
-    if(id == undefined){
+    if (id == undefined) {
         res.send("All Field Required");
     }
-    else{
-    console.log(id);
-    jwt.verify(id, key.secret, function (err, decode) {
-        if (err) {
-            res.redirect('/');
-            a.alert("PPPPPP")
-        }
-        else {
-            let role = decode.role;
-            if (role == "resetpass") {
-                req.id = decode.id;
-                next();
-
+    else {
+        console.log(id);
+        jwt.verify(id, key.secret, function (err, decode) {
+            if (err) {
+                msg = err;
+                res.render('login.html', { msg });
+                a.alert("PPPPPP")
             }
             else {
-                
-                res.send("Invalid Token");
+                let role = decode.role;
+                if (role == "resetpass") {
+                    req.id = decode.id;
+                    next();
+
+                }
+                else {
+
+                    res.send("Invalid Token");
+                }
             }
-        }
-    })}
+        })
+    }
 }
 
 
@@ -61,32 +63,33 @@ function respass(req, res) {
     let token = req.body.link || undefined;
     let id = req.body.id || undefined;
     let pass = req.body.password || undefined;
-    if ((token == undefined )  || (id == undefined ) || (pass == undefined)){
+    if ((token == undefined) || (id == undefined) || (pass == undefined)) {
         res.send("All Field Required");
     }
-    else{
-    userSchema.findOne({ '_id': id, 'passwordreset': token }).exec((err, data) => {
-        if (err) {
-            console.log(err)
-        }
-        else if (data == null) {
-            res.send("Link Expired");
-            a.alert("Link Expired")
-        }
-        else {
-            data.passwordreset = undefined;
-            data.password = pass;
-            data.save(function (err, result) {
-                if (err) {
-                    console.log(err);
-                }
-                else {
-                    res.redirect('/');
-                    a.alert("Password Changed")
-                }
-            })
-        }
-    })}
+    else {
+        userSchema.findOne({ '_id': id, 'passwordreset': token }).exec((err, data) => {
+            if (err) {
+                console.log(err)
+            }
+            else if (data == null) {
+                res.send("Link Expired");
+                a.alert("Link Expired")
+            }
+            else {
+                data.passwordreset = undefined;
+                data.password = pass;
+                data.save(function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    else {
+                        msg = "password Changed"
+                        res.render('login.html', { msg });
+                    }
+                })
+            }
+        })
+    }
 }
 
 
@@ -95,74 +98,73 @@ function adminpass(req, res) {
     let id = req.id || undefined;
     let pass = req.body.pass || undefined;
     let npass = req.body.newpass || undefined;
-    let pro=data.profilepic;
-    let name=data.name;
-    if((id == undefined) || (pass == undefined) || (npass == undefined)){
+    if ((id == undefined) || (pass == undefined) || (npass == undefined)) {
         res.send("All Field Required");
     }
 
 
-    else{
-    userSchema.findById({ '_id': id }, function (err, data) {
-        if (err) {
-            console.log(err);
+    else {
+        userSchema.findById({ '_id': id }, function (err, data) {
+            if (err) {
+                console.log(err);
 
-        }
-        else {
-            data.comparePassword(pass, function (err, isMatch) {
-                if (err) {
-                    res.json({ "err": err });
-                }
-                if (isMatch) {
-                    bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
-                        if (err) {
-                            console.log(err)
-                        }
+            }
+            else {
+                data.comparePassword(pass, function (err, isMatch) {
+                    if (err) {
+                        res.json({ "err": err });
+                    }
+                    if (isMatch) {
+                        bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
+                            if (err) {
+                                console.log(err)
+                            }
 
-                        else {
-                            bcrypt.hash(npass, salt, async function (err, hash) {
-                                if (err) {
-                                    console.log(err)
-                                }
-                                else {
-                                    let mail = data.email;
-                                    console.log(mail)
-                                    let status = await eMail(mail, npass);
-
-                                    let passnew = hash;
-                                    console.log(status)
-                                    if (status) {
-                                        userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'password': passnew } }, function (err, data) {
-                                            if (err) {
-                                                console.log(err);
-                                            }
-                                            else {
-                                                msg = "Admin Password Updated And Email Send"
-                                                a.alert(msg)
-                                                let pro=""
-                                                let name=""
-                                                res.render('index.html',{msg,pro,name});
-                                            }
-                                        })
+                            else {
+                                bcrypt.hash(npass, salt, async function (err, hash) {
+                                    if (err) {
+                                        console.log(err)
                                     }
                                     else {
-                                        res.json("Internal Error")
+                                        let mail = data.email;
+                                        console.log(mail)
+                                        let status = await eMail(mail, npass);
+
+                                        let passnew = hash;
+                                        console.log(status)
+                                        if (status) {
+                                            userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'password': passnew } }, function (err, data) {
+                                                if (err) {
+                                                    console.log(err);
+                                                }
+                                                else {
+                                                    msg = "Admin Password Updated And Email Send"
+                                                    a.alert(msg)
+                                                    let pro = ""
+                                                    let name = ""
+                                                    res.render('index.html', { msg, pro, name });
+                                                }
+                                            })
+                                        }
+                                        else {
+                                            res.json("Internal Error")
+                                        }
                                     }
-                                }
-                            });
-                        }
-                    });
-                }
-                if (!isMatch) {
-                    msg = "Wrong PAssword"
-                                                a.alert(msg)
-                                                let pro=""
-                                                let name=""
-                                                res.render('index.html',{msg,pro,name});
-                }
-            })
-        }
-    })}
+                                });
+                            }
+                        });
+                    }
+                    if (!isMatch) {
+                        msg = "Wrong PAssword"
+                        a.alert(msg)
+                        let pro = ""
+                        let name = ""
+                        res.render('index.html', { msg, pro, name });
+                    }
+                })
+            }
+        })
+    }
 
 
 }
@@ -170,103 +172,104 @@ function adminpass(req, res) {
 function register(req, res) {
 
     let nam = req.body.name || undefined;
-    let age = req.body.age || undefined; 
+    let age = req.body.age || undefined;
     let email = req.body.email || undefined;
     let password = generator.generate({
         length: 10
     });
 
-    if((nam == undefined) || (age==undefined)||(email==undefined)){
+    if ((nam == undefined) || (age == undefined) || (email == undefined)) {
         res.send("All Field Required");
     }
 
 
 
     else {
-    let status = eMail(email,password,undefined);
-    if (status){    
-    let testUser = new userSchema({ 'name': nam, 'age': age, 'email': email, 'password': password })
+        let status = eMail(email, password, undefined);
+        if (status) {
+            let testUser = new userSchema({ 'name': nam, 'age': age, 'email': email, 'password': password })
 
-    testUser.save(function (err) {
-        if (err) {
-            if (err.code == '11000') {
-                console.log(err);
-                msg = "Email Already Registered"
-                res.render('register.html', { msg });
-            }
-            else {
-                msg = err
-                res.render('register.html', { msg });
-            }
+            testUser.save(function (err) {
+                if (err) {
+                    if (err.code == '11000') {
+                        console.log(err);
+                        msg = "Email Already Registered"
+                        res.render('register.html', { msg });
+                    }
+                    else {
+                        msg = err
+                        res.render('register.html', { msg });
+                    }
+                }
+                else {
+                    msg = "Registered As User"
+                    let pro = ""
+                    let name = ""
+                    res.render("index.html", { msg, pro, name });
+                }
+            })
         }
         else {
-            msg = "Registered As User"
-            let pro=""
-            let name=""
-            res.render("index.html",{msg,pro,name});
+
+            msg = "Error In Sending Mail Try Again"
+            let pro = ""
+            let name = ""
+            res.render("index.html", { msg, pro, name });
         }
-    })
-}
-else{
-    
-    msg = "Error In Sending Mail Try Again"
-    let pro=""
-    let name=""
-    res.render("index.html",{msg,pro,name});
-}
-}
+    }
 }
 
 function login(req, res) {
 
     let email = req.body.email || undefined;
     let pass = req.body.password || undefined;
-    if((email == undefined) || (pass==undefined)){
+    if ((email == undefined) || (pass == undefined)) {
         res.send("All Field Required");
     }
-    else{
-    userSchema.findOne({ email: email }, function (err, data) {
+    else {
+        userSchema.findOne({ email: email }, function (err, data) {
 
 
-        if (err) {
+            if (err) {
 
 
-        }
+            }
 
-        else if (data == null) {
-            res.send("User Not Found")
+            else if (data == null) {
+                res.send("User Not Found")
 
-        }
-        else {
-            // test a matching password
-            data.comparePassword(pass, function (err, isMatch) {
-                if (err) throw err;
-                if (isMatch) {
-                    object_id = data.id;
-                    role = data.role;
-                    if ((role == 'admin') || (role == 'subadmin')) {
+            }
+            else {
+                // test a matching password
+                data.comparePassword(pass, function (err, isMatch) {
+                    if (err) throw err;
+                    if (isMatch) {
+                        object_id = data.id;
+                        role = data.role;
+                        if ((role == 'admin') || (role == 'subadmin')) {
 
-                        let token = generateToken(object_id, role)
-                        let pro = data.profilepic;
-                        let name = data.name;
+                            let token = generateToken(object_id, role)
+                            let pro = data.profilepic;
+                            let name = data.name;
 
-                        msg = role;
-                        res.cookie('name', token).redirect('/');
+                            msg = role;
+                            res.cookie('name', token).redirect('/');
 
+                        }
+                        else {
+                            res.json('Logged In as User');
+                        }
                     }
                     else {
-                        res.json('Logged In as User');
+
+                        res.send("Wrong Password")
                     }
-                }
-                else {
-
-                    res.send("Wrong Password")
-                }
-            });
+                });
 
 
-        }
-    });}
+            }
+        });
+    }
 
 }
 
@@ -274,7 +277,7 @@ function login(req, res) {
 
 function getUser(req, res) {
 
-    userSchema.find({ 'role': 'user' ,'is_deleted': false }, function (err, data) {
+    userSchema.find({ 'role': 'user', 'is_deleted': false }, function (err, data) {
         juser = data
         res.render('user.html', { juser });
     })
@@ -282,7 +285,7 @@ function getUser(req, res) {
 }
 function getSubadmin(req, res) {
 
-    userSchema.find({ 'role': 'subadmin' ,'is_deleted':false }, function (err, data) {
+    userSchema.find({ 'role': 'subadmin', 'is_deleted': false }, function (err, data) {
         juser = data
         res.render('subadmin.html', { juser });
     })
@@ -293,41 +296,43 @@ function getSubadmin(req, res) {
 function changepass(req, res) {
     let id = req.params.id || undefined;
 
-    if((id == undefined)){
+    if ((id == undefined)) {
         res.send("All Field Required");
     }
-    else{
-    userSchema.findOne({ '_id': id }, function (err, data) {
-        if (err) {
-            res.json("Error ")
-        }
-        else {
-            console.log(data)
-            let email = data.email;
-            let name = data.name;
-            res.render('changesubadminpass.html', { id, email, name });
-        }
-    })}
+    else {
+        userSchema.findOne({ '_id': id }, function (err, data) {
+            if (err) {
+                res.json("Error ")
+            }
+            else {
+                console.log(data)
+                let email = data.email;
+                let name = data.name;
+                res.render('changesubadminpass.html', { id, email, name });
+            }
+        })
+    }
 }
 function changelinkpass(req, res) {
     let id = req.id;
     let link = req.params.id;
-    if((id == undefined) || (link==undefined)){
+    if ((id == undefined) || (link == undefined)) {
         res.send("All Field Required");
     }
-    else{
-    console.log("????????????????????????", link);
-    userSchema.findOne({ '_id': id }, function (err, data) {
-        if (err) {
-            res.json("Error ")
-        }
-        else {
-            console.log(data)
-            let email = data.email;
-            let name = data.name;
-            res.render('linkpass.html', { id, email, name, link });
-        }
-    })}
+    else {
+        console.log("????????????????????????", link);
+        userSchema.findOne({ '_id': id }, function (err, data) {
+            if (err) {
+                res.json("Error ")
+            }
+            else {
+                console.log(data)
+                let email = data.email;
+                let name = data.name;
+                res.render('linkpass.html', { id, email, name, link });
+            }
+        })
+    }
 }
 function mod(req, res) {
     let id = req.params.id;
@@ -356,24 +361,25 @@ function modify(req, res) {
     let role = req.body.role || undefined;
     let id = req.body.id || undefined;
     let is_deleted = req.body.is_deleted || undefined;
-    if((name == undefined) || (age==undefined)||(role ==undefined)||(id ==undefined)||(is_deleted ==undefined)){
+    if ((name == undefined) || (age == undefined) || (role == undefined) || (id == undefined) || (is_deleted == undefined)) {
         res.send("All Field Required");
     }
-    else{
-    userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'name': name, 'age': age, 'role': role, 'is_deleted': is_deleted } }, (err, data) => {
-        if (err) {
-            console.log(err)
+    else {
+        userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'name': name, 'age': age, 'role': role, 'is_deleted': is_deleted } }, (err, data) => {
+            if (err) {
+                console.log(err)
 
-        }
-        else {
-            if (role == 'subadmin') {
-                res.redirect('/viewsubadmin');
             }
             else {
-                res.redirect('/viewuser');
+                if (role == 'subadmin') {
+                    res.redirect('/viewsubadmin');
+                }
+                else {
+                    res.redirect('/viewuser');
+                }
             }
-        }
-    })}
+        })
+    }
 }
 function del(req, res) {
 
@@ -403,37 +409,38 @@ function registersubadmin(req, res) {
     let password = req.body.pass || undefined;
     let role = 'subadmin'
 
-    if((name == undefined) || (age==undefined)||(role ==undefined)||(email ==undefined)||(password ==undefined)){
+    if ((name == undefined) || (age == undefined) || (role == undefined) || (email == undefined) || (password == undefined)) {
         res.send("All Field Required");
     }
-    else{
-    let testUser = new userSchema({ 'name': name, 'age': age, 'email': email, 'password': password, 'role': role })
+    else {
+        let testUser = new userSchema({ 'name': name, 'age': age, 'email': email, 'password': password, 'role': role })
 
-    testUser.save(function (err) {
-        if (err) {
+        testUser.save(function (err) {
+            if (err) {
 
-            if (err.code == '11000') {
-                console.log(err);
-                msg = "Email Already Registered"
-                res.render('register.html', { msg });
+                if (err.code == '11000') {
+                    console.log(err);
+                    msg = "Email Already Registered"
+                    res.render('register.html', { msg });
+                }
+                else {
+                    msg = err
+                    res.render('register.html', { msg });
+                }
             }
             else {
-                msg = err
-                res.render('register.html', { msg });
+
+
+                msg = "Registered";
+                a.alert(msg)
+                let pro = ""
+                let name = ""
+
+                res.render('index.html', { msg, pro, name });
+
             }
-        }
-        else {
-            
-
-            msg = "Registered";
-            a.alert(msg)
-            let pro=""
-            let name=""
-            
-            res.render('index.html',{msg,pro,name});
-
-        }
-    })}
+        })
+    }
 
 }
 
@@ -445,12 +452,12 @@ function generateToken(value, role) {
 function checkAuth(req, res, next) {
 
     let token = req.cookies.name;
-        
+
     jwt.verify(token, key.secret, function (err, data) {
         if (err) {
             console.log(err);
-            msg=err
-            res.render('login.html',{msg});
+            msg = err
+            res.render('login.html', { msg });
         }
         else {
             console.log(data)
@@ -523,71 +530,72 @@ async function resetsapass(req, res) {
             }
             else {
                 msg = "Password Changed & Mail Send"
-                let pro=""
-                let name=""
-                res.render('index.html',{msg,pro,name});
+                let pro = ""
+                let name = ""
+                res.render('index.html', { msg, pro, name });
                 a.alert(msg)
             }
         });
     }
     else {
-        msg="Internal Error"
-        let pro=""
-            let name=""
-        res.render('index.html',{msg,pro,name});
+        msg = "Internal Error"
+        let pro = ""
+        let name = ""
+        res.render('index.html', { msg, pro, name });
         a.alert("Internal Error")
     }
 }
 function resetpass(req, res) {
-   
+
 
     let mail = req.body.email || undefined;
-    if((mail == undefined) ){
+    if ((mail == undefined)) {
         res.send("All Field Required");
     }
-    else{
-    userSchema.findOne({ 'email': mail }, async (err, data) => {
-        if (err) {
-            msg="Internal Error"
-            res.render('login.html',{msg});
-            a.alert(err)
-        }
-        if (data == null) {
-            console.log(data);
-            msg="User Not Registered"
-            res.render('login.html',{msg});
-            a.alert("USer Not Registered")
-        }
-        else {
-            let r=data.role;
-            if(r=="subadmin"){
-                msg="Request Admin"
-                res.render('login.html',{msg});
-                a.alert("Request Admin")
+    else {
+        userSchema.findOne({ 'email': mail }, async (err, data) => {
+            if (err) {
+                msg = "Internal Error"
+                res.render('login.html', { msg });
+                a.alert(err)
             }
-            else{
-            console.log(data);
-            let id = data.id;
-            let method = "resetpass"
-            let token = await generateToken(id, method);
-            let pass;
-            let status = await eMail(mail, pass, token);
-            if (status) {
-                userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'passwordreset': token } }).exec((err, result) => {
-                    if (err) {
-                        msg=err
-                        res.render('login.html',{msg});
-                    }
-                    else {
-                        msg="Reset Link Has Been Send To Mail"
-                        res.render('login.html',{msg});
-                        a.alert("Reset Link Has Been Send To Mail")
-                    }
-                })
+            if (data == null) {
+                console.log(data);
+                msg = "User Not Registered"
+                res.render('login.html', { msg });
+                a.alert("USer Not Registered")
             }
-        }
-        }
-    })}
+            else {
+                let r = data.role;
+                if (r == "subadmin") {
+                    msg = "Request Admin"
+                    res.render('login.html', { msg });
+                    a.alert("Request Admin")
+                }
+                else {
+                    console.log(data);
+                    let id = data.id;
+                    let method = "resetpass"
+                    let token = await generateToken(id, method);
+                    let pass;
+                    let status = await eMail(mail, pass, token);
+                    if (status) {
+                        userSchema.findByIdAndUpdate({ '_id': id }, { $set: { 'passwordreset': token } }).exec((err, result) => {
+                            if (err) {
+                                msg = err
+                                res.render('login.html', { msg });
+                            }
+                            else {
+                                msg = "Reset Link Has Been Send To Mail"
+                                res.render('login.html', { msg });
+                                a.alert("Reset Link Has Been Send To Mail")
+                            }
+                        })
+                    }
+                }
+            }
+        })
+    }
 
     //let status= await eMail(mail,pass,link);
     // if(status){
@@ -638,60 +646,62 @@ function decryppass(req, res, next) {
 function checkreset(req, res, next) {
 
     if (req.body.email) {
-        let email = req.body.email || undefined 
-        if(email == undefined){
+        let email = req.body.email || undefined
+        if (email == undefined) {
             res.send("All Field Required");
         }
-        else{
-        userSchema.findOne({ 'email': email }, function (err, data) {
-            if (err) {
-                res.json("error")
-            }
-            else if (data == null) {
-                msg="User Not Found"
-                res.render('login.html',{msg});
-            }
-            else {
-                let role = data.role;
-                if (role == 'subadmin') {
-
-                    res.json("Request Admin To Change Password")
+        else {
+            userSchema.findOne({ 'email': email }, function (err, data) {
+                if (err) {
+                    res.json("error")
+                }
+                else if (data == null) {
+                    msg = "User Not Found"
+                    res.render('login.html', { msg });
                 }
                 else {
-                    let pass = generator.generate({
-                        length: 10
-                    })
-                    let email = data.email;
-                    req.email = email;
-                    req.pass = pass;
-                    next();
-                }
-            }
+                    let role = data.role;
+                    if (role == 'subadmin') {
 
-        })}
+                        res.json("Request Admin To Change Password")
+                    }
+                    else {
+                        let pass = generator.generate({
+                            length: 10
+                        })
+                        let email = data.email;
+                        req.email = email;
+                        req.pass = pass;
+                        next();
+                    }
+                }
+
+            })
+        }
     }
 
     if (req.body.id) {
         let id = req.body.id || undefined;
         let pass = req.body.password || undefined;
         console.log("jhjjjjjk")
-        if((id==undefined) || (pass == undefined)){
+        if ((id == undefined) || (pass == undefined)) {
             res.send("All Field Required");
         }
-        else{
-        userSchema.findById({ '_id': id }, function (err, data) {
-            if (err) {
-                console.log(err)
-            }
-            else {
-                console.log(data);
-                let email = data.email;
-                req.pass = pass;
-                req.email = email;
-                next();
+        else {
+            userSchema.findById({ '_id': id }, function (err, data) {
+                if (err) {
+                    console.log(err)
+                }
+                else {
+                    console.log(data);
+                    let email = data.email;
+                    req.pass = pass;
+                    req.email = email;
+                    next();
 
-            }
-        })}
+                }
+            })
+        }
     }
 }
 
@@ -705,86 +715,86 @@ function fileupload(req, res) {
 
 
     form.parse(req);
-    
-    form.on('fileBegin',(name,file)=>{
+
+    form.on('fileBegin', (name, file) => {
         let ext = file.name.substring(file.name.lastIndexOf('.') + 1);
         file.name = 'IMG-' + id + '.' + ext;
         file.path = form.uploadDir + file.name;
     }),
-    
-    form.on('file', (name, file) => {
 
-        
-        let n= file.name || undefined;
-        let ext = file.name.substring(file.name.lastIndexOf('.') + 1);
-        file.name = 'IMG-' + id + '.' + ext;
-        if((n == undefined) || (n == null)){
-            res.send("Please Select Image");
-        }
+        form.on('file', (name, file) => {
 
 
-        else
-        {
-        
-        
-        file.path = form.uploadDir + file.name;
-        if(ext == "png" || ext == "jpeg"  || ext == "jpg"){
-            console.log(file.path);
-            cloudinary.v2.uploader.upload(file.path, {
-                folder: 'chirag',
-                use_filename: true,
-                transformation: [
-                    {
-                        aspect_ratio: "1:1",
-                        background: "#262c35",
-                        border: "5px_solid_rgb:ff0000",
-                        gravity: "auto",
-                        radius: "max",
-                        width: 1000,
-                        crop: "fill"
-                    }]
-    
-            }, function (error, result) {
-    
-                if(error){
-                    res.send(error)
-                    console.log(error);
+            let n = file.name || undefined;
+            let ext = file.name.substring(file.name.lastIndexOf('.') + 1);
+            file.name = 'IMG-' + id + '.' + ext;
+            if ((n == undefined) || (n == null)) {
+                res.send("Please Select Image");
+            }
+
+
+            else {
+
+
+                file.path = form.uploadDir + file.name;
+                if (ext == "png" || ext == "jpeg" || ext == "jpg") {
+                    console.log(file.path);
+                    cloudinary.v2.uploader.upload(file.path, {
+                        folder: 'chirag',
+                        use_filename: true,
+                        transformation: [
+                            {
+                                aspect_ratio: "1:1",
+                                background: "#262c35",
+                                border: "5px_solid_rgb:ff0000",
+                                gravity: "auto",
+                                radius: "max",
+                                width: 1000,
+                                crop: "fill"
+                            }]
+
+                    }, function (error, result) {
+
+                        if (error) {
+                            res.send(error)
+                            console.log(error);
+                        }
+                        else {
+
+
+                            userSchema.findOne({ '_id': req.id }, (err, data) => {
+                                if (err) {
+
+                                }
+                                else if (data == null) {
+                                    res.redirect('/');
+
+                                }
+                                else {
+                                    data.profilepic = result.url;
+                                    data.save((err) => {
+                                        if (err) {
+
+                                        }
+                                        else {
+                                            msg = "File Uploaded";
+                                            a.alert(msg);
+                                            let pro = ""
+                                            let name = ""
+                                            res.render('index.html', { msg, pro, name });
+                                        }
+                                    })
+
+                                }
+                            })
+                        }
+                    })
                 }
-                else{
+                else {
+                    res.send(" Invalid Format Please Select Image with png jpg or jpeg format");
+                }
+            }
 
-                
-                userSchema.findOne({ '_id': req.id }, (err, data) => {
-                    if (err) {
-    
-                    }
-                    else if (data == null) {
-                         res.redirect('/');
-    
-                    }
-                    else {
-                        data.profilepic = result.url;
-                        data.save((err) => {
-                            if (err) {
-    
-                            }
-                            else {
-                                msg = "File Uploaded";
-                                a.alert(msg);
-                                let pro=""
-                                let name=""
-                                res.render('index.html',{msg,pro,name});
-                            }
-                        })
-    
-                    }
-                })
-            }
-            })}
-            else{
-                res.send(" Invalid Format Please Select Image with png jpg or jpeg format");
-            }
-        }
-        
-        
-    });
+
+        });
 }
