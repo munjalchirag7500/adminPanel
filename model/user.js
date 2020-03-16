@@ -8,11 +8,12 @@ const validate = require('mongoose-validator')
 var nameValidator = [
     validate({
         validator: 'isLength',
-        arguments: [3, 3],
+        arguments: [3, 40],
         message: 'Name should be between {ARGS[0]} and {ARGS[1]} characters',
     }),
     validate({
         validator: 'isAlphanumeric',
+        passIfEmpty: true,
         message: 'Name should contain alpha-numeric characters only',
     }),
 ]
@@ -24,30 +25,29 @@ var ageValidator = [
     }),
     validate({
         validator: 'isNumeric',
+        passIfEmpty: true,
         message: 'Age should contain numeric characters only',
     }),
 ]
 var passValidator = [
     validate({
         validator: 'isLength',
-        arguments: [8, 35],
+        arguments: [8],
+
         message: 'Pawword Length Should Be Betwwen 8 and 32',
-    }),
-    validate({
-        validator: 'isAlphanumeric',
-        message: 'Password should contain numeric characters only',
-    }),
+    })
 ]
 var emailValidator = [
     validate({
         validator: 'isEmail',
+        passIfEmpty: true,
         message: 'Invalid Email',
     }),
 ]
 const UserSchema = new Schema({
-    name: { type: String, validate: nameValidator },
-    age: { type: String, validate: ageValidator },
-    email: { type: String, unique: true, validate: emailValidator },
+    name: { type: String, validate: nameValidator,required:false },
+    age: { type: String, validate: ageValidator,required:false },
+    email: { type: String, unique: true, validate: emailValidator ,required:false},
     password: { type: String, validate: passValidator },
     role: {
         type: String,
