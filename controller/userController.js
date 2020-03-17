@@ -590,7 +590,7 @@ function checkAuth(req, res, next) {
     jwt.verify(token, key.secret, function (err, data) {
         if (err) {
             console.log(err);
-            msg = err
+            msg = "Enter Username Password To Login"
             res.render('login.html', {
                 msg
             });
