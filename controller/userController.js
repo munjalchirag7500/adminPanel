@@ -242,7 +242,6 @@ function register(req, res) {
     let password = generator.generate({
         length: 10
     });
-    console.log("AAAAAAAAAAA", typeof (age));
 
     if ((nam == undefined) || (age == undefined) || (email == undefined)) {
         res.send("All Field Required");
@@ -506,6 +505,7 @@ function del(req, res) {
         if (err) {
             res.json("err")
         } else {
+            console.log(data)
             role = data.role;
 
             if (role == 'user') {

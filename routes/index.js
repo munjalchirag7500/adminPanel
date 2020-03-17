@@ -22,18 +22,12 @@ router.get('/',controller.checkAuth,function(req,res){
 });
 
 router.get('/not',controller.checkAuth, (req, res) => {
-  userSchema.findById({'_id':id},(err,data)=>{
-    if(err){
-
-    }
-    else{
-      console.log(data);
-      let pro=data.profilepic;
-      let name=data.name;
+  
       msg="Not Authorized"
+      pro=""
+      name=""
       res.render('index.html',{msg,pro,name});
-    }
-  })
+
 
 });
 
@@ -80,14 +74,14 @@ router.get('/adminchange', controller.checkAuth,controller.checkType,(req, res) 
 
 });
 
-router.get('/upload', controller.checkAuth,controller.checkType,(req, res) => {
+router.get('/upload', controller.checkAuth,(req, res) => {
   
   res.render('upload.html');
 
 });
 
 
-router.post('/uploadpic',controller.checkAuth,controller.checkType,controller.fileupload)
+router.post('/uploadpic',controller.checkAuth,controller.fileupload)
 
 router.post('/adminchangepass',controller.checkAuth,controller.checkType,controller.adminpass);
 
